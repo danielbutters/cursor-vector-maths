@@ -65,7 +65,8 @@ class VectorVisualizer {
         // Create camera
         this.camera = new THREE.PerspectiveCamera(
             75,
-            window.innerWidth / window.innerHeight,
+            //window.innerWidth / window.innerHeight,
+            1,
             0.1,
             1000
         );
@@ -230,36 +231,40 @@ class VectorVisualizer {
         const createTextSprite = (text, color) => {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            canvas.width = 128;
-            canvas.height = 128;
+            canvas.width = 80;
+            canvas.height = 64;
             
-            context.fillStyle = color;
-            context.font = '48px Arial';
+            // Draw the text with outline, matching the number labels
+            context.font = 'bold 64px Arial';
+            context.strokeStyle = 'black';
+            context.lineWidth = 2;
             context.textAlign = 'center';
             context.textBaseline = 'middle';
-            context.fillText(text, 64, 64);
+            context.strokeText(text, 40, 32);
+            context.fillStyle = color;
+            context.fillText(text, 40, 32);
             
             const texture = new THREE.CanvasTexture(canvas);
             const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
             const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.scale.set(1, 1, 1);
+            sprite.scale.set(0.5, 0.5, 0.5);
             
             return sprite;
         };
 
         // X-axis label
         const xLabel = createTextSprite('X', '#ff0000');
-        xLabel.position.set(10, 0, 0);
+        xLabel.position.set(10.5, 0, 0);
         this.scene.add(xLabel);
 
         // Y-axis label
         const yLabel = createTextSprite('Y', '#00ff00');
-        yLabel.position.set(0, 10, 0);
+        yLabel.position.set(0, 10.5, 0);
         this.scene.add(yLabel);
 
         // Z-axis label
         const zLabel = createTextSprite('Z', '#0000ff');
-        zLabel.position.set(0, 0, 10);
+        zLabel.position.set(0, 0, 10.5);
         this.scene.add(zLabel);
     }
 
@@ -292,7 +297,7 @@ class VectorVisualizer {
     createNumberLabel(number, x, y, z, axis, color) {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        canvas.width = 64;
+        canvas.width = 80;
         canvas.height = 64;
         
         // Draw the number directly without background
@@ -301,9 +306,9 @@ class VectorVisualizer {
         context.lineWidth = 2;
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        context.strokeText(number.toString(), 32, 32);
+        context.strokeText(number.toString(), 40, 32);
         context.fillStyle = color;
-        context.fillText(number.toString(), 32, 32);
+        context.fillText(number.toString(), 40, 32);
         
         const texture = new THREE.CanvasTexture(canvas);
         const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
@@ -334,32 +339,37 @@ class VectorVisualizer {
         }
 
         // Create arrow geometry
-        const direction = new THREE.Vector3(vector.x, vector.y, vector.z);
-        const length = direction.length();
+        const arrowDirection = new THREE.Vector3(vector.x, vector.y, vector.z);
+        const arrowLength = arrowDirection.length();
         
-        if (length === 0) {
+        if (arrowLength === 0) {
             this[name] = null;
             return;
         }
 
-        direction.normalize();
+        arrowDirection.normalize();
 
         const arrowGeometry = new THREE.ConeGeometry(0.2, 0.5, 8);
-        const arrowMaterial = new THREE.MeshLambertMaterial({ color: color });
+        const arrowMaterial = new THREE.MeshBasicMaterial({ color: color });
         const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
 
-        // Create line geometry
-        const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Vector3(vector.x, vector.y, vector.z)
-        ]);
-        const lineMaterial = new THREE.LineBasicMaterial({ color: color, linewidth: 3 });
-        const line = new THREE.Line(lineGeometry, lineMaterial);
+        // Create thick line using cylinder geometry
+        const lineLength = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+        const lineGeometry = new THREE.CylinderGeometry(0.05, 0.05, lineLength, 8);
+        const lineMaterial = new THREE.MeshBasicMaterial({ color: color });
+        const line = new THREE.Mesh(lineGeometry, lineMaterial);
+        
+        // Position and rotate the cylinder to point from origin to vector
+        line.position.set(vector.x / 2, vector.y / 2, vector.z / 2);
+        const lineDirection = new THREE.Vector3(vector.x, vector.y, vector.z).normalize();
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), lineDirection);
+        line.setRotationFromQuaternion(quaternion);
 
         // Position arrow at the end of the line and orient it correctly
         arrow.position.set(vector.x, vector.y, vector.z);
         // Make arrow point in the direction of the vector (away from origin)
-        arrow.lookAt(vector.x + direction.x, vector.y + direction.y, vector.z + direction.z);
+        arrow.lookAt(vector.x + arrowDirection.x, vector.y + arrowDirection.y, vector.z + arrowDirection.z);
         arrow.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
         
         // Group arrow and line
@@ -380,7 +390,17 @@ class VectorVisualizer {
         
         // Calculate and update result vector
         this.calculateResult();
-        this.createVectorArrow(this.resultVector, 0x44ff44, 'resultMesh');
+        
+        // Only display result arrow if both vectors have magnitude > 0
+        if (this.vectorA.magnitude() > 0 && this.vectorB.magnitude() > 0) {
+            this.createVectorArrow(this.resultVector, 0x44ff44, 'resultMesh');
+        } else {
+            // Remove result arrow if it exists
+            if (this.resultMesh) {
+                this.scene.remove(this.resultMesh);
+                this.resultMesh = null;
+            }
+        }
         
         // Update display
         this.updateDisplay();
