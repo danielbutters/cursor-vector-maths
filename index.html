@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Vector Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>3D Vector Visualizer</h1>
+            <p>Create and manipulate 3D vectors with real-time visualization</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="visualization-panel">
+                <div id="canvas-container"></div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ff4444;"></div>
+                        <span>Vector A</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #4444ff;"></div>
+                        <span>Vector B</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #44ff44;"></div>
+                        <span>Result</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls-panel">
+                <div class="control-section map-selection">
+                    <h2>Vector A</h2>
+                    <p>Adjust the X, Y, Z components of Vector A using the sliders below.</p>
+                    <div class="slider-group">
+                        <label for="vectorA-x"><span class="axis-label x-axis">X</span>: <span id="vectorA-x-value">0</span></label>
+                        <input type="range" id="vectorA-x" min="-10" max="10" value="0" step="0.1">
+                        
+                        <label for="vectorA-y"><span class="axis-label y-axis">Y</span>: <span id="vectorA-y-value">0</span></label>
+                        <input type="range" id="vectorA-y" min="-10" max="10" value="0" step="0.1">
+                        
+                        <label for="vectorA-z"><span class="axis-label z-axis">Z</span>: <span id="vectorA-z-value">0</span></label>
+                        <input type="range" id="vectorA-z" min="-10" max="10" value="0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-section warp-slider">
+                    <h2>Vector B</h2>
+                    <p>Adjust the X, Y, Z components of Vector B using the sliders below.</p>
+                    <div class="slider-group">
+                        <label for="vectorB-x"><span class="axis-label x-axis">X</span>: <span id="vectorB-x-value">0</span></label>
+                        <input type="range" id="vectorB-x" min="-10" max="10" value="0" step="0.1">
+                        
+                        <label for="vectorB-y"><span class="axis-label y-axis">Y</span>: <span id="vectorB-y-value">0</span></label>
+                        <input type="range" id="vectorB-y" min="-10" max="10" value="0" step="0.1">
+                        
+                        <label for="vectorB-z"><span class="axis-label z-axis">Z</span>: <span id="vectorB-z-value">0</span></label>
+                        <input type="range" id="vectorB-z" min="-10" max="10" value="0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-section shape-selection">
+                    <h2>Vector Operations</h2>
+                    <p>Select an operation to perform on the two vectors.</p>
+                    <div class="operation-buttons">
+                        <button id="add-btn" class="operation-btn active">Addition (A + B)</button>
+                        <button id="subtract-btn" class="operation-btn">Subtraction (A - B)</button>
+                        <button id="multiply-btn" class="operation-btn">Multiplication (A × B)</button>
+                    </div>
+                </div>
+                
+                <div class="control-section coordinate">
+                    <h2>Vector Information</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <strong>Vector A:</strong>
+                            <span id="vectorA-display">(0, 0, 0)</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Vector B:</strong>
+                            <span id="vectorB-display">(0, 0, 0)</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Result:</strong>
+                            <span id="result-display">(0, 0, 0)</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Magnitude:</strong>
+                            <span id="magnitude-display">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
