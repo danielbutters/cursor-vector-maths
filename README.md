@@ -1,10 +1,10 @@
-# 3D Vector Visualizer
+# 3D Vector Visualiser
 
-A modern web-based 3D vector visualization tool that allows users to create, manipulate, and perform mathematical operations on 3D vectors with real-time visual feedback.
+A modern web-based 3D vector visualisation tool that allows users to create, manipulate, and perform mathematical operations on 3D vectors with real-time visual feedback.
 
 ## Features
 
-- **Interactive 3D Visualization**: Real-time rendering of vectors using Three.js
+- **Interactive 3D Visualisation**: Real-time rendering of vectors using Three.js
 - **Vector Manipulation**: Adjust vector components (X, Y, Z) using intuitive sliders
 - **Mathematical Operations**: Perform addition, subtraction, and cross product operations
 - **Real-time Updates**: See results instantly as you modify vectors
@@ -42,7 +42,7 @@ Result.z = A.x * B.y - A.y * B.x
    - **Addition (A + B)**: Adds the two vectors
    - **Subtraction (A - B)**: Subtracts vector B from vector A
    - **Multiplication (A × B)**: Computes the cross product
-5. **View Results**: The result vector is displayed in green in the 3D visualization
+5. **View Results**: The result vector is displayed in green in the 3D visualisation
 6. **Explore 3D Space**: Use mouse controls to rotate, zoom, and pan the 3D view
 
 ## 3D Controls
@@ -63,7 +63,7 @@ Result.z = A.x * B.y - A.y * B.x
 VectorMaths/
 ├── index.html          # Main HTML file
 ├── styles.css          # CSS styling
-├── script.js           # JavaScript logic and 3D visualization
+├── script.js           # JavaScript logic and 3D visualisation
 └── README.md           # This file
 ```
 

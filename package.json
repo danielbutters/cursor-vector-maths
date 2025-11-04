@@ -1,7 +1,7 @@
 {
-  "name": "3d-vector-visualizer",
+  "name": "3d-vector-visualiser",
   "version": "1.0.0",
-  "description": "A modern web-based 3D vector visualization tool with interactive controls",
+  "description": "A modern web-based 3D vector visualisation tool with interactive controls",
   "main": "index.html",
   "scripts": {
     "start": "python -m http.server 8000",
@@ -11,7 +11,7 @@
   "keywords": [
     "3d",
     "vector",
-    "visualization",
+    "visualisation",
     "mathematics",
     "threejs",
     "webgl",
@@ -21,7 +21,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/3d-vector-visualizer.git"
+    "url": "https://github.com/yourusername/3d-vector-visualiser.git"
   },
   "dependencies": {},
   "devDependencies": {},
@@ -31,4 +31,3 @@
     "not dead"
   ]
 }
-

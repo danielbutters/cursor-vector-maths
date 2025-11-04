@@ -51,6 +51,7 @@ class VectorVisualizer {
         this.resultMesh = null;
         this.axesHelper = null;
         this.gridHelper = null;
+        this.activeVector = null; // Track which vector is being edited
         
         this.init();
         this.setupEventListeners();
@@ -60,7 +61,7 @@ class VectorVisualizer {
     init() {
         // Create scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x1a1a2a);
+        this.scene.background = new THREE.Color(0xf5f5f5);
 
         // Create camera
         this.camera = new THREE.PerspectiveCamera(
@@ -99,12 +100,12 @@ class VectorVisualizer {
     }
 
     setupLighting() {
-        // Ambient light
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+        // Ambient light (brighter for light background)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         this.scene.add(ambientLight);
 
         // Directional light
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
         directionalLight.position.set(10, 10, 5);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
@@ -112,7 +113,7 @@ class VectorVisualizer {
         this.scene.add(directionalLight);
 
         // Point light
-        const pointLight = new THREE.PointLight(0xffffff, 0.5);
+        const pointLight = new THREE.PointLight(0xffffff, 0.4);
         pointLight.position.set(-10, -10, -10);
         this.scene.add(pointLight);
     }
@@ -133,7 +134,7 @@ class VectorVisualizer {
 
         const gridSize = 10;
         const gridDivisions = 1; // Grid lines at each integer
-        const gridMaterial = new THREE.LineBasicMaterial({ color: 0xcccccc, opacity: 0.3, transparent: true });
+        const gridMaterial = new THREE.LineBasicMaterial({ color: 0x666666, opacity: 0.4, transparent: true });
 
         // Create grid lines for XZ plane (horizontal)
         for (let i = -gridSize; i <= gridSize; i += gridDivisions) {
@@ -194,30 +195,30 @@ class VectorVisualizer {
     }
 
     createColoredAxes() {
-        // X-axis (red)
+        // X-axis (dark grey)
         const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(10, 0, 0)
         ]);
-        const xAxisMaterial = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 3 });
+        const xAxisMaterial = new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 3 });
         const xAxis = new THREE.Line(xAxisGeometry, xAxisMaterial);
         this.scene.add(xAxis);
 
-        // Y-axis (green)
+        // Y-axis (dark grey)
         const yAxisGeometry = new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0, 10, 0)
         ]);
-        const yAxisMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 3 });
+        const yAxisMaterial = new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 3 });
         const yAxis = new THREE.Line(yAxisGeometry, yAxisMaterial);
         this.scene.add(yAxis);
 
-        // Z-axis (blue)
+        // Z-axis (dark grey)
         const zAxisGeometry = new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0, 0, 10)
         ]);
-        const zAxisMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 3 });
+        const zAxisMaterial = new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 3 });
         const zAxis = new THREE.Line(zAxisGeometry, zAxisMaterial);
         this.scene.add(zAxis);
 
@@ -228,42 +229,50 @@ class VectorVisualizer {
 
     addAxisLabels() {
         // Create canvas for text
-        const createTextSprite = (text, color) => {
+        const createTextSprite = (text) => {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            canvas.width = 80;
-            canvas.height = 64;
+            canvas.width = 256;
+            canvas.height = 256;
             
-            // Draw the text with outline, matching the number labels
-            context.font = 'bold 64px Arial';
-            context.strokeStyle = 'black';
-            context.lineWidth = 2;
+            context.font = 'bold 96px Arial';
             context.textAlign = 'center';
             context.textBaseline = 'middle';
-            context.strokeText(text, 40, 32);
-            context.fillStyle = color;
-            context.fillText(text, 40, 32);
+            
+            // Draw black border (stroke) - thicker for better visibility
+            context.strokeStyle = '#000000';
+            context.lineWidth = 12;
+            context.strokeText(text, 128, 128);
+            
+            // Draw white fill
+            context.fillStyle = '#ffffff';
+            context.fillText(text, 128, 128);
             
             const texture = new THREE.CanvasTexture(canvas);
-            const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+            texture.alphaTest = 0.1;
+            const spriteMaterial = new THREE.SpriteMaterial({ 
+                map: texture,
+                transparent: true,
+                alphaTest: 0.1
+            });
             const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.scale.set(0.5, 0.5, 0.5);
+            sprite.scale.set(1.2, 1.2, 1.2);
             
             return sprite;
         };
 
         // X-axis label
-        const xLabel = createTextSprite('X', '#ff0000');
+        const xLabel = createTextSprite('X');
         xLabel.position.set(10.5, 0, 0);
         this.scene.add(xLabel);
 
         // Y-axis label
-        const yLabel = createTextSprite('Y', '#00ff00');
+        const yLabel = createTextSprite('Y');
         yLabel.position.set(0, 10.5, 0);
         this.scene.add(yLabel);
 
         // Z-axis label
-        const zLabel = createTextSprite('Z', '#0000ff');
+        const zLabel = createTextSprite('Z');
         zLabel.position.set(0, 0, 10.5);
         this.scene.add(zLabel);
     }
@@ -271,49 +280,61 @@ class VectorVisualizer {
     addAxisNumbers() {
         // Create tick marks and numbers for each axis
         for (let i = 1; i <= 10; i++) {
-            // X-axis numbers (red)
-            this.createNumberLabel(i, i, 0, 0, 'x', '#ff0000');
+            // X-axis numbers
+            this.createNumberLabel(i, i, 0, 0, 'x');
             
-            // Y-axis numbers (green)
-            this.createNumberLabel(i, 0, i, 0, 'y', '#00ff00');
+            // Y-axis numbers
+            this.createNumberLabel(i, 0, i, 0, 'y');
             
-            // Z-axis numbers (blue)
-            this.createNumberLabel(i, 0, 0, i, 'z', '#0000ff');
+            // Z-axis numbers
+            this.createNumberLabel(i, 0, 0, i, 'z');
         }
 
         // Negative numbers
         for (let i = 1; i <= 10; i++) {
-            // X-axis numbers (red)
-            this.createNumberLabel(-i, -i, 0, 0, 'x', '#ff0000');
+            // X-axis numbers
+            this.createNumberLabel(-i, -i, 0, 0, 'x');
             
-            // Y-axis numbers (green)
-            this.createNumberLabel(-i, 0, -i, 0, 'y', '#00ff00');
+            // Y-axis numbers
+            this.createNumberLabel(-i, 0, -i, 0, 'y');
             
-            // Z-axis numbers (blue)
-            this.createNumberLabel(-i, 0, 0, -i, 'z', '#0000ff');
+            // Z-axis numbers
+            this.createNumberLabel(-i, 0, 0, -i, 'z');
         }
     }
 
-    createNumberLabel(number, x, y, z, axis, color) {
+    createNumberLabel(number, x, y, z, axis) {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        canvas.width = 80;
-        canvas.height = 64;
+        canvas.width = 160;
+        canvas.height = 128;
         
-        // Draw the number directly without background
-        context.font = 'bold 64px Arial';
-        context.strokeStyle = 'black';
-        context.lineWidth = 2;
+        // Clear canvas with transparent background
+        context.clearRect(0, 0, 160, 128);
+        
+        // Draw the number with white fill and black border - larger and bolder
+        context.font = 'bold 96px Arial';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        context.strokeText(number.toString(), 40, 32);
-        context.fillStyle = color;
-        context.fillText(number.toString(), 40, 32);
+        
+        // Draw black border (stroke) - thicker for better visibility
+        context.strokeStyle = '#000000';
+        context.lineWidth = 10;
+        context.strokeText(number.toString(), 80, 64);
+        
+        // Draw white fill
+        context.fillStyle = '#ffffff';
+        context.fillText(number.toString(), 80, 64);
         
         const texture = new THREE.CanvasTexture(canvas);
-        const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+        texture.alphaTest = 0.1;
+        const spriteMaterial = new THREE.SpriteMaterial({ 
+            map: texture,
+            transparent: true,
+            alphaTest: 0.1
+        });
         const sprite = new THREE.Sprite(spriteMaterial);
-        sprite.scale.set(0.5, 0.5, 0.5);
+        sprite.scale.set(0.7, 0.7, 0.7);
         
         // Position the number label at the same position as the tick mark
         if (axis === 'x') {
@@ -327,79 +348,176 @@ class VectorVisualizer {
         this.scene.add(sprite);
     }
 
-    createVectorArrow(vector, color, name) {
+    createTextSprite(text, color, backgroundColor = null) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 256;
+        canvas.height = 256;
+        
+        // Clear canvas with transparent background
+        context.clearRect(0, 0, 256, 256);
+        
+        // Add background if specified, otherwise transparent
+        if (backgroundColor) {
+            context.fillStyle = backgroundColor;
+            context.fillRect(0, 0, 256, 256);
+        }
+        
+        // Add text with white fill and black border - larger and bolder
+        context.font = 'bold 120px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        
+        // Black border (stroke) - thicker for better visibility
+        context.strokeStyle = '#000000';
+        context.lineWidth = 16;
+        context.strokeText(text, 128, 128);
+        
+        // White fill
+        context.fillStyle = '#ffffff';
+        context.fillText(text, 128, 128);
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.alphaTest = 0.1; // Enable transparency
+        const spriteMaterial = new THREE.SpriteMaterial({ 
+            map: texture,
+            transparent: true,
+            alphaTest: 0.1
+        });
+        const sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(1.2, 1.2, 1.2);
+        
+        return sprite;
+    }
+
+    createVectorArrow(vector, color, name, label = null, isActive = false) {
         // Remove existing arrow if it exists
         if (this[name]) {
             this.scene.remove(this[name]);
-        }
-
-        if (vector.magnitude() === 0) {
             this[name] = null;
-            return;
         }
 
         // Create arrow geometry
-        const arrowDirection = new THREE.Vector3(vector.x, vector.y, vector.z);
-        const arrowLength = arrowDirection.length();
+        const direction = new THREE.Vector3(vector.x, vector.y, vector.z);
+        const length = direction.length();
         
-        if (arrowLength === 0) {
+        // If vector has zero length and not active, don't create it
+        if (length === 0 && !isActive) {
             this[name] = null;
             return;
         }
 
-        arrowDirection.normalize();
+        // If length is 0 but active, create a small visible vector
+        if (length === 0) {
+            direction.set(0.1, 0, 0); // Small default direction
+        } else {
+            direction.normalize();
+        }
 
-        const arrowGeometry = new THREE.ConeGeometry(0.2, 0.5, 8);
-        const arrowMaterial = new THREE.MeshBasicMaterial({ color: color });
+        // Use brighter color and larger arrow if active
+        const displayColor = isActive ? this.brightenColor(color) : color;
+        const arrowSize = isActive ? 0.3 : 0.2;
+        const arrowLength = isActive ? 0.6 : 0.5;
+
+        // Create line geometry first (use actual vector or small default if zero)
+        const endPoint = length === 0 && isActive 
+            ? new THREE.Vector3(0.1, 0, 0) 
+            : new THREE.Vector3(vector.x, vector.y, vector.z);
+            
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(0, 0, 0),
+            endPoint
+        ]);
+        
+        // Create group first
+        const group = new THREE.Group();
+        
+        // If active, add a glow effect with a slightly thicker line using a duplicate
+        if (isActive) {
+            const glowLine = new THREE.Line(
+                lineGeometry.clone(),
+                new THREE.LineBasicMaterial({ 
+                    color: displayColor,
+                    opacity: 0.4,
+                    transparent: true
+                })
+            );
+            group.add(glowLine);
+        }
+
+        // Create main line
+        const lineMaterial = new THREE.LineBasicMaterial({ 
+            color: displayColor,
+            linewidth: 100 // Note: linewidth doesn't work in WebGL, but kept for compatibility
+        });
+        const line = new THREE.Line(lineGeometry, lineMaterial);
+        group.add(line);
+
+        // Create arrow geometry
+        const arrowGeometry = new THREE.ConeGeometry(arrowSize, arrowLength, 8);
+        const arrowMaterial = new THREE.MeshLambertMaterial({ color: displayColor });
         const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
 
-        // Create thick line using cylinder geometry
-        const lineLength = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
-        const lineGeometry = new THREE.CylinderGeometry(0.05, 0.05, lineLength, 8);
-        const lineMaterial = new THREE.MeshBasicMaterial({ color: color });
-        const line = new THREE.Mesh(lineGeometry, lineMaterial);
-        
-        // Position and rotate the cylinder to point from origin to vector
-        line.position.set(vector.x / 2, vector.y / 2, vector.z / 2);
-        const lineDirection = new THREE.Vector3(vector.x, vector.y, vector.z).normalize();
-        const quaternion = new THREE.Quaternion();
-        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), lineDirection);
-        line.setRotationFromQuaternion(quaternion);
-
         // Position arrow at the end of the line and orient it correctly
-        arrow.position.set(vector.x, vector.y, vector.z);
+        arrow.position.set(endPoint.x, endPoint.y, endPoint.z);
         // Make arrow point in the direction of the vector (away from origin)
-        arrow.lookAt(vector.x + arrowDirection.x, vector.y + arrowDirection.y, vector.z + arrowDirection.z);
+        arrow.lookAt(endPoint.x + direction.x, endPoint.y + direction.y, endPoint.z + direction.z);
         arrow.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-        
-        // Group arrow and line
-        const group = new THREE.Group();
-        group.add(line);
         group.add(arrow);
+
+        // Add label if provided (with transparent background)
+        if (label) {
+            const labelSprite = this.createTextSprite(label, '#333333', null);
+            // Position label at the end of the vector, slightly offset along the direction
+            const offset = direction.clone().multiplyScalar(0.6);
+            labelSprite.position.set(
+                endPoint.x + offset.x,
+                endPoint.y + offset.y,
+                endPoint.z + offset.z
+            );
+            // Keep the larger scale from createTextSprite (already 1.2x)
+            group.add(labelSprite);
+        }
 
         this[name] = group;
         this.scene.add(group);
     }
 
+    brightenColor(color) {
+        // Convert hex to RGB, brighten, and convert back
+        const r = ((color >> 16) & 0xff) * 1.5;
+        const g = ((color >> 8) & 0xff) * 1.5;
+        const b = (color & 0xff) * 1.5;
+        
+        return ((Math.min(255, Math.floor(r)) << 16) |
+                (Math.min(255, Math.floor(g)) << 8) |
+                Math.min(255, Math.floor(b)));
+    }
+
     updateVisualization() {
-        // Update vector A
-        this.createVectorArrow(this.vectorA, 0xff4444, 'vectorAMesh');
+        // Update vector A with label and highlight if active
+        const isAActive = this.activeVector === 'A';
+        this.createVectorArrow(this.vectorA, 0xb30000, 'vectorAMesh', 'A', isAActive);
         
-        // Update vector B
-        this.createVectorArrow(this.vectorB, 0x4444ff, 'vectorBMesh');
+        // Update vector B with label and highlight if active
+        const isBActive = this.activeVector === 'B';
+        this.createVectorArrow(this.vectorB, 0x0000b3, 'vectorBMesh', 'B', isBActive);
         
-        // Calculate and update result vector
-        this.calculateResult();
+        // Calculate and update result vector only if both vectors have magnitude > 0
+        const vectorAMagnitude = this.vectorA.magnitude();
+        const vectorBMagnitude = this.vectorB.magnitude();
         
-        // Only display result arrow if both vectors have magnitude > 0
-        if (this.vectorA.magnitude() > 0 && this.vectorB.magnitude() > 0) {
-            this.createVectorArrow(this.resultVector, 0x44ff44, 'resultMesh');
+        if (vectorAMagnitude > 0 && vectorBMagnitude > 0) {
+            this.calculateResult();
+            this.createVectorArrow(this.resultVector, 0x00b300, 'resultMesh', 'R', false);
         } else {
-            // Remove result arrow if it exists
+            // Remove result vector if it exists
             if (this.resultMesh) {
                 this.scene.remove(this.resultMesh);
                 this.resultMesh = null;
             }
+            // Reset result vector to zero for display purposes
+            this.resultVector = new Vector3D(0, 0, 0);
         }
         
         // Update display
@@ -443,9 +561,9 @@ class VectorVisualizer {
 
     getColoredComponent(value, axis) {
         const colors = {
-            x: '#ff0000',
-            y: '#00ff00',
-            z: '#0000ff'
+            x: '#b30000',
+            y: '#00b300',
+            z: '#0000b3'
         };
         return `<span style="color: ${colors[axis]}; font-weight: bold;">${value.toFixed(2)}</span>`;
     }
@@ -455,34 +573,56 @@ class VectorVisualizer {
     setupEventListeners() {
         // Vector A sliders
         document.getElementById('vectorA-x').addEventListener('input', (e) => {
+            this.activeVector = 'A';
             this.vectorA.x = parseFloat(e.target.value);
             this.updateVisualization();
         });
         
         document.getElementById('vectorA-y').addEventListener('input', (e) => {
+            this.activeVector = 'A';
             this.vectorA.y = parseFloat(e.target.value);
             this.updateVisualization();
         });
         
         document.getElementById('vectorA-z').addEventListener('input', (e) => {
+            this.activeVector = 'A';
             this.vectorA.z = parseFloat(e.target.value);
             this.updateVisualization();
         });
 
         // Vector B sliders
         document.getElementById('vectorB-x').addEventListener('input', (e) => {
+            this.activeVector = 'B';
             this.vectorB.x = parseFloat(e.target.value);
             this.updateVisualization();
         });
         
         document.getElementById('vectorB-y').addEventListener('input', (e) => {
+            this.activeVector = 'B';
             this.vectorB.y = parseFloat(e.target.value);
             this.updateVisualization();
         });
         
         document.getElementById('vectorB-z').addEventListener('input', (e) => {
+            this.activeVector = 'B';
             this.vectorB.z = parseFloat(e.target.value);
             this.updateVisualization();
+        });
+
+        // Clear active vector when mouse is released (on mouseup)
+        ['vectorA-x', 'vectorA-y', 'vectorA-z', 'vectorB-x', 'vectorB-y', 'vectorB-z'].forEach(id => {
+            document.getElementById(id).addEventListener('mouseup', () => {
+                setTimeout(() => {
+                    this.activeVector = null;
+                    this.updateVisualization();
+                }, 100);
+            });
+            document.getElementById(id).addEventListener('touchend', () => {
+                setTimeout(() => {
+                    this.activeVector = null;
+                    this.updateVisualization();
+                }, 100);
+            });
         });
 
         // Operation buttons
@@ -497,6 +637,64 @@ class VectorVisualizer {
         document.getElementById('multiply-btn').addEventListener('click', () => {
             this.setActiveOperation('multiply');
         });
+
+        // Reset button
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            this.resetVectors();
+        });
+
+        // Randomize button
+        document.getElementById('randomize-btn').addEventListener('click', () => {
+            this.randomizeVectors();
+        });
+    }
+
+    randomizeVectors() {
+        // Generate random values between -10 and 10 for Vector A
+        this.vectorA.x = Math.floor(Math.random() * 21) - 10; // -10 to 10
+        this.vectorA.y = Math.floor(Math.random() * 21) - 10;
+        this.vectorA.z = Math.floor(Math.random() * 21) - 10;
+
+        // Generate random values between -10 and 10 for Vector B
+        this.vectorB.x = Math.floor(Math.random() * 21) - 10;
+        this.vectorB.y = Math.floor(Math.random() * 21) - 10;
+        this.vectorB.z = Math.floor(Math.random() * 21) - 10;
+
+        // Update sliders to match random values
+        document.getElementById('vectorA-x').value = this.vectorA.x;
+        document.getElementById('vectorA-y').value = this.vectorA.y;
+        document.getElementById('vectorA-z').value = this.vectorA.z;
+        
+        document.getElementById('vectorB-x').value = this.vectorB.x;
+        document.getElementById('vectorB-y').value = this.vectorB.y;
+        document.getElementById('vectorB-z').value = this.vectorB.z;
+
+        // Update visualization
+        this.updateVisualization();
+    }
+
+    resetVectors() {
+        // Reset vector A to (0, 0, 0)
+        this.vectorA.x = 0;
+        this.vectorA.y = 0;
+        this.vectorA.z = 0;
+
+        // Reset vector B to (0, 0, 0)
+        this.vectorB.x = 0;
+        this.vectorB.y = 0;
+        this.vectorB.z = 0;
+
+        // Reset sliders to 0
+        document.getElementById('vectorA-x').value = 0;
+        document.getElementById('vectorA-y').value = 0;
+        document.getElementById('vectorA-z').value = 0;
+        
+        document.getElementById('vectorB-x').value = 0;
+        document.getElementById('vectorB-y').value = 0;
+        document.getElementById('vectorB-z').value = 0;
+
+        // Update visualization
+        this.updateVisualization();
     }
 
     setActiveOperation(operation) {
